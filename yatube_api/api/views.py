@@ -1,10 +1,9 @@
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework import viewsets, permissions, filters, status
+from rest_framework import viewsets, permissions, filters
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 
 from .permissions import IsAuthorOrReadOnly
 from posts.models import Post, Group, Comment, User
@@ -27,20 +26,11 @@ class PostViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    def perform_update(self, serializer):
-        super(PostViewSet, self).perform_update(serializer)
-
-    def perform_destroy(self, instance):
-        instance.delete()
-
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
     permission_classes = (IsAuthorOrReadOnly,)
-
-    def create(self, request):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -57,12 +47,6 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         post = get_object_or_404(Post, pk=self.kwargs.get('post_id'))
         serializer.save(author=self.request.user, post=post)
-
-    def perform_update(self, serializer):
-        super(CommentViewSet, self).perform_update(serializer)
-
-    def perform_destroy(self, instance):
-        instance.delete()
 
 
 class FollowViewSet(viewsets.ModelViewSet):
